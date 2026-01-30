@@ -1,0 +1,83 @@
+{
+  "$schema": "https://raw.githubusercontent.com/moltbot/moltbot/main/src/config/config.schema.json",
+  "agents": {
+    "defaults": {
+      "sandbox": {
+        "mode": "non-main",
+        "scope": "agent",
+        "browser": {
+          "enabled": true,
+          "image": "moltbot-sandbox-browser:bookworm-slim",
+          "controlUrl": "http://moltbot-browser:9222",
+          "headless": false,
+          "autoStart": true,
+          "autoStartTimeoutMs": 30000
+        },
+        "docker": {
+          "image": "moltbot-sandbox:bookworm-slim",
+          "workdir": "/workspace",
+          "readOnlyRoot": true,
+          "tmpfs": ["/tmp", "/var/tmp", "/run"],
+          "network": "none",
+          "user": "1000:1000",
+          "capDrop": ["ALL"],
+          "pidsLimit": 256,
+          "memory": "1g",
+          "memorySwap": "2g"
+        },
+        "workspaceAccess": "none"
+      }
+    }
+  },
+  "gateway": {
+    "mode": "local",
+    "bind": "lan",
+    "port": 18789
+  },
+  "channels": {
+    "feishu": {
+      "enabled": true,
+      "appId": "cli_xxxxxxxxxxxxx",
+      "appSecret": "your_app_secret_here",
+      "verificationToken": "your_verification_token_here",
+      "encryptKey": "your_encrypt_key_here"
+    },
+    "telegram": {
+      "enabled": false,
+      "token": "your_bot_token_here"
+    },
+    "discord": {
+      "enabled": false,
+      "token": "your_bot_token_here"
+    }
+  },
+  "tools": {
+    "sandbox": {
+      "tools": {
+        "allow": [
+          "exec",
+          "process",
+          "read",
+          "write",
+          "edit",
+          "browser",
+          "sessions_list",
+          "sessions_history",
+          "sessions_send"
+        ],
+        "deny": [
+          "canvas",
+          "nodes",
+          "cron",
+          "discord",
+          "gateway"
+        ]
+      }
+    }
+  },
+  "providers": {
+    "anthropic": {
+      "enabled": true
+    }
+  }
+}

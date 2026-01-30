@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # Gateway 服务 - Moltbot 核心网关
+  moltbot-gateway:
+    image: ${CLAWDBOT_IMAGE:-moltbot:local}
+    container_name: moltbot-gateway
+    restart: unless-stopped
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      NODE_ENV: production
+      CLAWDBOT_GATEWAY_TOKEN: ${CLAWDBOT_GATEWAY_TOKEN}
+      CLAWDBOT_GATEWAY_BIND: ${CLAWDBOT_GATEWAY_BIND:-lan}
+      CLAWDBOT_GATEWAY_PORT: ${CLAWDBOT_GATEWAY_PORT:-18789}
+      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
+      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
+      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+    volumes:
+      - ${CLAWDBOT_CONFIG_DIR:-~/.clawdbot}:/home/node/.clawdbot
+      - ${CLAWDBOT_WORKSPACE_DIR:-~/clawd}:/home/node/clawd
+    ports:
+      - "${CLAWDBOT_GATEWAY_PORT:-18789}:18789"
+      - "${CLAWDBOT_BRIDGE_PORT:-18790}:18790"
+    networks:
+      - moltbot-internal
+    depends_on:
+      - moltbot-browser
+    init: true
+    command:
+      [
+        "node",
+        "dist/index.js",
+        "gateway",
+        "--bind",
+        "${CLAWDBOT_GATEWAY_BIND:-lan}",
+        "--port",
+        "${CLAWDBOT_GATEWAY_PORT:-18789}"
+      ]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18789/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Browser 沙箱服务 - 提供隔离的浏览器环境
+  moltbot-browser:
+    image: moltbot-sandbox-browser:bookworm-slim
+    container_name: moltbot-browser
+    restart: unless-stopped
+    environment:
+      - CLAWDBOT_BROWSER_HEADLESS=0
+      - CLAWDBOT_BROWSER_ENABLE_NOVNC=0
+      - CLAWDBOT_BROWSER_CDP_PORT=9222
+    expose:
+      - "9222"  # CDP 端口仅在容器内部访问
+    networks:
+      - moltbot-internal
+    shm_size: 2gb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9222/json/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # CLI 工具 - 管理和配置工具
+  moltbot-cli:
+    image: ${CLAWDBOT_IMAGE:-moltbot:local}
+    container_name: moltbot-cli
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      BROWSER: echo
+      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
+      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
+      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+    volumes:
+      - ${CLAWDBOT_CONFIG_DIR:-~/.clawdbot}:/home/node/.clawdbot
+      - ${CLAWDBOT_WORKSPACE_DIR:-~/clawd}:/home/node/clawd
+    networks:
+      - moltbot-internal
+    stdin_open: true
+    tty: true
+    init: true
+    entrypoint: ["node", "dist/index.js"]
+    profiles:
+      - tools  # 仅在显式指定时启动
+
+# 自定义网络 - 容器间隔离通信
+networks:
+  moltbot-internal:
+    driver: bridge
+    name: moltbot-internal
