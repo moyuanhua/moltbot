@@ -3,29 +3,30 @@ version: '3.8'
 services:
   # Gateway 服务 - Moltbot 核心网关
   moltbot-gateway:
-    image: ${CLAWDBOT_IMAGE:-moltbot:local}
+    image: ${OPENCLAW_IMAGE:-moltbot:local}
     container_name: moltbot-gateway
     restart: unless-stopped
     environment:
       HOME: /home/node
       TERM: xterm-256color
       NODE_ENV: production
-      CLAWDBOT_GATEWAY_TOKEN: ${CLAWDBOT_GATEWAY_TOKEN}
-      CLAWDBOT_GATEWAY_BIND: ${CLAWDBOT_GATEWAY_BIND:-lan}
-      CLAWDBOT_GATEWAY_PORT: ${CLAWDBOT_GATEWAY_PORT:-18789}
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
+      OPENCLAW_GATEWAY_BIND: ${OPENCLAW_GATEWAY_BIND:-lan}
+      OPENCLAW_GATEWAY_PORT: ${OPENCLAW_GATEWAY_PORT:-18789}
       CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
     volumes:
-      - ${CLAWDBOT_CONFIG_DIR:-~/.clawdbot}:/home/node/.clawdbot
-      - ${CLAWDBOT_WORKSPACE_DIR:-~/clawd}:/home/node/clawd
+      - ${OPENCLAW_CONFIG_DIR:-~/.openclaw}:/home/node/.openclaw
+      - ${OPENCLAW_WORKSPACE_DIR:-~/openclaw/workspace}:/home/node/.openclaw/workspace
     ports:
-      - "${CLAWDBOT_GATEWAY_PORT:-18789}:18789"
-      - "${CLAWDBOT_BRIDGE_PORT:-18790}:18790"
+      - "${OPENCLAW_GATEWAY_PORT:-18789}:18789"
+      - "${OPENCLAW_BRIDGE_PORT:-18790}:18790"
     networks:
       - moltbot-internal
     depends_on:
-      - moltbot-browser
+      moltbot-browser:
+        condition: service_healthy
     init: true
     command:
       [
@@ -33,12 +34,13 @@ services:
         "dist/index.js",
         "gateway",
         "--bind",
-        "${CLAWDBOT_GATEWAY_BIND:-lan}",
+        "${OPENCLAW_GATEWAY_BIND:-lan}",
         "--port",
-        "${CLAWDBOT_GATEWAY_PORT:-18789}"
+        "${OPENCLAW_GATEWAY_PORT:-18789}",
+        "--allow-unconfigured"
       ]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:18789/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:18789/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -67,7 +69,7 @@ services:
 
   # CLI 工具 - 管理和配置工具
   moltbot-cli:
-    image: ${CLAWDBOT_IMAGE:-moltbot:local}
+    image: ${OPENCLAW_IMAGE:-moltbot:local}
     container_name: moltbot-cli
     environment:
       HOME: /home/node
@@ -77,8 +79,8 @@ services:
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
     volumes:
-      - ${CLAWDBOT_CONFIG_DIR:-~/.clawdbot}:/home/node/.clawdbot
-      - ${CLAWDBOT_WORKSPACE_DIR:-~/clawd}:/home/node/clawd
+      - ${OPENCLAW_CONFIG_DIR:-~/.openclaw}:/home/node/.openclaw
+      - ${OPENCLAW_WORKSPACE_DIR:-~/openclaw/workspace}:/home/node/.openclaw/workspace
     networks:
       - moltbot-internal
     stdin_open: true

@@ -14,8 +14,8 @@ echo ""
 COMPOSE_FILE="docker-compose.multicontainer.yml"
 ENV_FILE=".env.multicontainer"
 ENV_EXAMPLE=".env.multicontainer.example"
-CONFIG_DIR="${HOME}/.clawdbot"
-WORKSPACE_DIR="${HOME}/clawd"
+CONFIG_DIR="${HOME}/.openclaw"
+WORKSPACE_DIR="${HOME}/openclaw/workspace"
 GATEWAY_IMAGE="moltbot:local"
 BROWSER_IMAGE="moltbot-sandbox-browser:bookworm-slim"
 
@@ -175,17 +175,17 @@ if [[ "${CREATE_ENV:-false}" == "true" ]]; then
     # 创建 .env 文件
     cat > "${ENV_FILE}" << EOF
 # ===== Moltbot Gateway 配置 =====
-CLAWDBOT_GATEWAY_TOKEN=${GATEWAY_TOKEN}
-CLAWDBOT_GATEWAY_PORT=18789
-CLAWDBOT_GATEWAY_BIND=lan
-CLAWDBOT_BRIDGE_PORT=18790
+OPENCLAW_GATEWAY_TOKEN=${GATEWAY_TOKEN}
+OPENCLAW_GATEWAY_PORT=18789
+OPENCLAW_GATEWAY_BIND=lan
+OPENCLAW_BRIDGE_PORT=18790
 
 # ===== 目录配置 =====
-CLAWDBOT_CONFIG_DIR=${CONFIG_DIR}
-CLAWDBOT_WORKSPACE_DIR=${WORKSPACE_DIR}
+OPENCLAW_CONFIG_DIR=${CONFIG_DIR}
+OPENCLAW_WORKSPACE_DIR=${WORKSPACE_DIR}
 
 # ===== 镜像配置 =====
-CLAWDBOT_IMAGE=${GATEWAY_IMAGE}
+OPENCLAW_IMAGE=${GATEWAY_IMAGE}
 
 # ===== Claude API（可选）=====
 CLAUDE_AI_SESSION_KEY=
